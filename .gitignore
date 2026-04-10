@@ -1,0 +1,12 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Exported binaries
+*.apk
+*.aab
+*.exe
+*.dmg
+
+# Claude Code local settings (personal, not for team)
+.claude/settings.local.json
