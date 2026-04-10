@@ -634,7 +634,7 @@ func _update_collection_summary() -> void:
 		var unique      = 0
 		var total_owned = 0
 		for cname in CardDatabase.CARD_NAMES[rarity]:
-			var cnt = GameState.collected.get(cname, 0)
+			var cnt = GameState.get_card_total_owned(cname)
 			if cnt > 0:
 				unique += 1
 				total_owned += cnt
@@ -707,9 +707,10 @@ func _show_pack_reveal(result: Dictionary) -> void:
 	var cards = result.get("cards", [])
 	for i in range(cards.size()):
 		var card   = cards[i]
-		var cname  = card.get("name", "")
-		# It's a dupe if collected count > 1 (already incremented in GameState)
-		var is_dupe = GameState.collected.get(cname, 0) > 1
+		var cname     = card.get("name", "")
+		var variation = card.get("variation", "normal")
+		# It's a dupe if this exact variant count > 1 (already incremented in GameState)
+		var is_dupe = GameState.collected.get(cname + "|" + variation, 0) > 1
 
 		var small = CardWidgets.make_small_card(card, is_dupe)
 		small.pivot_offset = Vector2(50, 75)
@@ -749,7 +750,7 @@ func _on_floridex_pressed() -> void:
 func _on_dex_card_selected(card: Dictionary) -> void:
 	var owned_list: Array = []
 	for c in CardDatabase.CARDS:
-		if GameState.collected.get(c["name"], 0) > 0:
+		if GameState.get_card_total_owned(c["name"]) > 0:
 			owned_list.append(c)
 	_cardviewer.open_card(card, owned_list)
 

@@ -128,11 +128,14 @@ func open_pack(pack_idx: int) -> Dictionary:
 	var result = PackLogic.open_pack(CardDatabase.PACKS[pack_idx]["id"], upgrades_bought)
 
 	for card in result["cards"]:
-		var cname = card["name"]
-		if collected.get(cname, 0) > 0:
+		var cname     = card["name"]
+		var variation = card.get("variation", CardDatabase.VARIATION_NORMAL)
+		var key       = cname + "|" + variation
+		# Dupe if any variant of this card was already owned before this pull
+		if _is_any_variant_owned(cname):
 			var rarity = card["rarity"]
 			duplicates[rarity] = duplicates.get(rarity, 0) + 1
-		collected[cname] = collected.get(cname, 0) + 1
+		collected[key] = collected.get(key, 0) + 1
 
 	var event = result["event"]
 	var pname = CardDatabase.PACKS[pack_idx]["label"]
@@ -171,11 +174,33 @@ func sell_dupes() -> bool:
 	return true
 
 func get_unique_collected() -> int:
-	var count = 0
-	for cname in collected:
-		if collected[cname] > 0:
-			count += 1
-	return count
+	var unique_names: Dictionary = {}
+	for key in collected:
+		if collected[key] > 0:
+			unique_names[key.split("|")[0]] = true
+	return unique_names.size()
+
+# Returns true if the player owns any variant of card_name.
+func _is_any_variant_owned(card_name: String) -> bool:
+	for key in collected:
+		if key.split("|")[0] == card_name and collected[key] > 0:
+			return true
+	return false
+
+# Total copies owned across all variants.
+func get_card_total_owned(card_name: String) -> int:
+	var total = 0
+	for key in collected:
+		if key.split("|")[0] == card_name:
+			total += collected.get(key, 0)
+	return total
+
+# Best variant owned (full_art > shiny > normal), or "" if not owned.
+func get_card_best_variant(card_name: String) -> String:
+	for v in [CardDatabase.VARIATION_FULL_ART, CardDatabase.VARIATION_SHINY, CardDatabase.VARIATION_NORMAL]:
+		if collected.get(card_name + "|" + v, 0) > 0:
+			return v
+	return ""
 
 func add_log(msg: String) -> void:
 	log_lines.append(msg)

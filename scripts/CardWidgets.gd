@@ -54,8 +54,14 @@ static func make_big_card(card: Dictionary, owned_count: int = 0) -> Control:
 	var header = HBoxContainer.new()
 	vbox.add_child(header)
 
+	var variation = card.get("variation", "normal")
+	var variation_suffix = ""
+	match variation:
+		"shiny":    variation_suffix = "  ✨ Shiny"
+		"full_art": variation_suffix = "  🎨 Full Art"
+
 	var lbl_rarity = Label.new()
-	lbl_rarity.text = rlabel
+	lbl_rarity.text = rlabel + variation_suffix
 	lbl_rarity.add_theme_color_override("font_color", tc)
 	lbl_rarity.add_theme_font_size_override("font_size", 12)
 	lbl_rarity.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -253,12 +259,25 @@ static func make_small_card(card: Dictionary, is_dupe: bool = false) -> Control:
 		lbl_dupe.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(lbl_dupe)
 
+	var variation = card.get("variation", "normal")
+	if variation != "normal":
+		var lbl_var = Label.new()
+		if variation == "shiny":
+			lbl_var.text = "✨ SHINY"
+			lbl_var.add_theme_color_override("font_color", Color("#C9980A"))
+		else:
+			lbl_var.text = "🎨 FULL ART"
+			lbl_var.add_theme_color_override("font_color", Color("#185FA5"))
+		lbl_var.add_theme_font_size_override("font_size", 8)
+		lbl_var.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vbox.add_child(lbl_var)
+
 	return root
 
 # ── DexCard ───────────────────────────────────────────────────────────────────
 # Small card for Floridex grid
 
-static func make_dex_card(card: Dictionary, owned: int = 0) -> Control:
+static func make_dex_card(card: Dictionary, owned: int = 0, best_variant: String = "") -> Control:
 	var is_owned = owned > 0
 	var rarity   = card.get("rarity", "common")
 	var bc       = border_color(rarity) if is_owned else Color("#D0D0C8")
@@ -308,5 +327,12 @@ static func make_dex_card(card: Dictionary, owned: int = 0) -> Control:
 		lbl_count.add_theme_color_override("font_color", Color("#6B6B6B"))
 		lbl_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(lbl_count)
+
+	if is_owned and best_variant != "normal" and best_variant != "":
+		var lbl_var = Label.new()
+		lbl_var.text = "✨" if best_variant == "shiny" else "🎨"
+		lbl_var.add_theme_font_size_override("font_size", 10)
+		lbl_var.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vbox.add_child(lbl_var)
 
 	return root

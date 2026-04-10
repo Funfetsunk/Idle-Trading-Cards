@@ -97,7 +97,7 @@ func _refresh() -> void:
 		return
 
 	var card = _owned_cards[_current_idx]
-	var owned_count = GameState.collected.get(card["name"], 0)
+	var owned_count = GameState.get_card_total_owned(card["name"])
 	var big = CardWidgets.make_big_card(card, owned_count)
 	big.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_big_card_slot.add_child(big)

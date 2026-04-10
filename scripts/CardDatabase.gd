@@ -1,67 +1,88 @@
 extends Node
 
-const RARITY_COMMON   = "common"
-const RARITY_UNCOMMON = "uncommon"
-const RARITY_RARE     = "rare"
-const RARITY_HOLO     = "holo"
-const RARITY_ULTRA    = "ultra"
-const RARITY_SECRET   = "secret"
+const RARITY_COMMON    = "common"
+const RARITY_UNCOMMON  = "uncommon"
+const RARITY_RARE      = "rare"
+const RARITY_ULTRA     = "ultra"      # was: Holo Rare
+const RARITY_SECRET    = "secret"     # was: Ultra Rare
+const RARITY_LEGENDARY = "legendary"  # was: Secret Rare
 
-const RARITY_ORDER = [RARITY_COMMON, RARITY_UNCOMMON, RARITY_RARE, RARITY_HOLO, RARITY_ULTRA, RARITY_SECRET]
+const RARITY_ORDER = [RARITY_COMMON, RARITY_UNCOMMON, RARITY_RARE, RARITY_ULTRA, RARITY_SECRET, RARITY_LEGENDARY]
 
 const RARITY_LABELS = {
-	RARITY_COMMON:   "Common",
-	RARITY_UNCOMMON: "Uncommon",
-	RARITY_RARE:     "Rare",
-	RARITY_HOLO:     "Holo Rare",
-	RARITY_ULTRA:    "Ultra Rare",
-	RARITY_SECRET:   "Secret Rare",
+	RARITY_COMMON:    "Common",
+	RARITY_UNCOMMON:  "Uncommon",
+	RARITY_RARE:      "Rare",
+	RARITY_ULTRA:     "Ultra Rare",
+	RARITY_SECRET:    "Secret Rare",
+	RARITY_LEGENDARY: "Legendary",
 }
 
 const RARITY_BORDER_COLORS = {
-	RARITY_COMMON:   Color("#AAAAAA"),
-	RARITY_UNCOMMON: Color("#0F6E56"),
-	RARITY_RARE:     Color("#EF9F27"),
-	RARITY_HOLO:     Color("#7F77DD"),
-	RARITY_ULTRA:    Color("#D85A30"),
-	RARITY_SECRET:   Color("#D4537E"),
+	RARITY_COMMON:    Color("#AAAAAA"),
+	RARITY_UNCOMMON:  Color("#0F6E56"),
+	RARITY_RARE:      Color("#EF9F27"),
+	RARITY_ULTRA:     Color("#7F77DD"),
+	RARITY_SECRET:    Color("#D85A30"),
+	RARITY_LEGENDARY: Color("#D4537E"),
 }
 
 const RARITY_BG_COLORS = {
-	RARITY_COMMON:   Color("#F5F5F0"),
-	RARITY_UNCOMMON: Color("#EAF5F0"),
-	RARITY_RARE:     Color("#FAEEDA"),
-	RARITY_HOLO:     Color("#EEEDFE"),
-	RARITY_ULTRA:    Color("#FAECE7"),
-	RARITY_SECRET:   Color("#FBEAF0"),
+	RARITY_COMMON:    Color("#F5F5F0"),
+	RARITY_UNCOMMON:  Color("#EAF5F0"),
+	RARITY_RARE:      Color("#FAEEDA"),
+	RARITY_ULTRA:     Color("#EEEDFE"),
+	RARITY_SECRET:    Color("#FAECE7"),
+	RARITY_LEGENDARY: Color("#FBEAF0"),
 }
 
 const RARITY_TEXT_COLORS = {
-	RARITY_COMMON:   Color("#6B6B6B"),
-	RARITY_UNCOMMON: Color("#0F6E56"),
-	RARITY_RARE:     Color("#854F0B"),
-	RARITY_HOLO:     Color("#534AB7"),
-	RARITY_ULTRA:    Color("#993C1D"),
-	RARITY_SECRET:   Color("#993556"),
+	RARITY_COMMON:    Color("#6B6B6B"),
+	RARITY_UNCOMMON:  Color("#0F6E56"),
+	RARITY_RARE:      Color("#854F0B"),
+	RARITY_ULTRA:     Color("#534AB7"),
+	RARITY_SECRET:    Color("#993C1D"),
+	RARITY_LEGENDARY: Color("#993556"),
 }
 
 const STAT_BASE = {
-	RARITY_COMMON:   20,
-	RARITY_UNCOMMON: 30,
-	RARITY_RARE:     45,
-	RARITY_HOLO:     55,
-	RARITY_ULTRA:    65,
-	RARITY_SECRET:   75,
+	RARITY_COMMON:    20,
+	RARITY_UNCOMMON:  30,
+	RARITY_RARE:      45,
+	RARITY_ULTRA:     55,
+	RARITY_SECRET:    65,
+	RARITY_LEGENDARY: 75,
 }
 
 const STAT_RANGE = {
-	RARITY_COMMON:   25,
-	RARITY_UNCOMMON: 30,
-	RARITY_RARE:     35,
-	RARITY_HOLO:     35,
-	RARITY_ULTRA:    30,
-	RARITY_SECRET:   25,
+	RARITY_COMMON:    25,
+	RARITY_UNCOMMON:  30,
+	RARITY_RARE:      35,
+	RARITY_ULTRA:     35,
+	RARITY_SECRET:    30,
+	RARITY_LEGENDARY: 25,
 }
+
+# ── Card variations ───────────────────────────────────────────────────────────
+
+const VARIATION_NORMAL   = "normal"
+const VARIATION_SHINY    = "shiny"
+const VARIATION_FULL_ART = "full_art"
+
+# Pull probabilities per variation per rarity. Must sum to 1.0.
+# Common/Uncommon/Rare: normal or shiny only.
+# Ultra/Secret: normal, shiny, or full art.
+# Legendary: always full art.
+const VARIATION_WEIGHTS = {
+	"common":    {"normal": 0.90, "shiny": 0.10},
+	"uncommon":  {"normal": 0.90, "shiny": 0.10},
+	"rare":      {"normal": 0.85, "shiny": 0.15},
+	"ultra":     {"normal": 0.78, "shiny": 0.17, "full_art": 0.05},
+	"secret":    {"normal": 0.70, "shiny": 0.20, "full_art": 0.10},
+	"legendary": {"full_art": 1.0},
+}
+
+# ── Card names ────────────────────────────────────────────────────────────────
 
 const CARD_NAMES = {
 	RARITY_COMMON: [
@@ -83,14 +104,14 @@ const CARD_NAMES = {
 		"Tidecrest", "Stonecrown", "Stormveil", "Shadowfang", "Dawnpetal",
 		"Ironmaw", "Crimsontail"
 	],
-	RARITY_HOLO: [
+	RARITY_ULTRA: [
 		"Auroraling", "Prismback", "Celestipaw", "Voidwhisker",
 		"Luminescenthorn", "Spectralfin", "Nebulaclaw", "Eclipsewing"
 	],
-	RARITY_ULTRA: [
+	RARITY_SECRET: [
 		"Chronofang", "Aethermaw", "Infinipaw", "Solarispine"
 	],
-	RARITY_SECRET: [
+	RARITY_LEGENDARY: [
 		"Omegaling", "The Shimmering One"
 	]
 }
@@ -112,12 +133,12 @@ const MOVE_NAMES = [
 	"Blaze Surge", "Aqua Blast", "Terra Quake", "Gale Force", "Pyre Eruption",
 	"Tide Wave", "Stone Fortress", "Storm Fury", "Shadow Strike", "Dawn Ray",
 	"Iron Crush", "Crimson Blade",
-	# Holo (8)
+	# Ultra Rare (8)
 	"Aurora Beam", "Prism Ray", "Celestial Strike", "Void Pulse",
 	"Luminescent Wave", "Spectral Slash", "Nebula Burst", "Eclipse Beam",
-	# Ultra (4)
+	# Secret Rare (4)
 	"Chrono Blast", "Aether Storm", "Infinity Pulse", "Solar Flare",
-	# Secret (2)
+	# Legendary (2)
 	"Omega Destroy", "Shimmer Annihilate"
 ]
 
@@ -156,15 +177,15 @@ const MOVE_DESCS = [
 	"Build an impenetrable stone fortress.", "The fury of a storm unleashed.",
 	"Strike silently from the shadows.", "A ray of powerful dawn light.",
 	"Crush with the force of iron.", "Slash with a razor crimson blade.",
-	# Holo (8)
+	# Ultra Rare (8)
 	"A prismatic beam of pure aurora light.", "Shatter reality with prism rays.",
 	"Strike with celestial energy.", "Pulse with raw void energy.",
 	"A wave of luminescent power.", "Slash with spectral force.",
 	"Burst with the energy of a nebula.", "Beam power through an eclipse.",
-	# Ultra (4)
+	# Secret Rare (4)
 	"Blast a hole through the timestream.", "Unleash a catastrophic aetheric storm.",
 	"Pulse with truly infinite energy.", "Harness the power of a solar flare.",
-	# Secret (2)
+	# Legendary (2)
 	"The ultimate omega destruction beam.", "Annihilate with pure shimmer energy."
 ]
 
@@ -187,13 +208,13 @@ const PACKS = [
 ]
 
 const UPGRADES = [
-	{"id": "u1", "name": "Lucky Bag",        "desc": "+5% holo chance",              "icon": "🎒", "cost": 600.0,       "effect": "holo",   "value": 0.05, "unlock_at": 200.0},
-	{"id": "u2", "name": "Foil Sleeve",      "desc": "+8% rare weight reduction",    "icon": "🃏", "cost": 3000.0,      "effect": "rare",   "value": 0.08, "unlock_at": 1000.0},
-	{"id": "u3", "name": "Magnifying Glass", "desc": "+10% holo chance",             "icon": "🔍", "cost": 15000.0,     "effect": "holo",   "value": 0.10, "unlock_at": 6000.0},
-	{"id": "u4", "name": "Price Guide Book", "desc": "+12% rare weight reduction",   "icon": "📖", "cost": 100000.0,    "effect": "rare",   "value": 0.12, "unlock_at": 40000.0},
-	{"id": "u5", "name": "Special Order",    "desc": "+6% ultra chance",             "icon": "📬", "cost": 700000.0,    "effect": "ultra",  "value": 0.06, "unlock_at": 250000.0},
-	{"id": "u6", "name": "Golden Wrapper",   "desc": "+10% ultra chance",            "icon": "🎁", "cost": 5000000.0,   "effect": "ultra",  "value": 0.10, "unlock_at": 1800000.0},
-	{"id": "u7", "name": "Secret Card Map",  "desc": "+3% secret chance",            "icon": "🗺️",  "cost": 40000000.0,  "effect": "secret", "value": 0.03, "unlock_at": 12000000.0},
+	{"id": "u1", "name": "Lucky Bag",        "desc": "+5% ultra rare chance",        "icon": "🎒", "cost": 600.0,       "effect": "ultra",     "value": 0.05, "unlock_at": 200.0},
+	{"id": "u2", "name": "Foil Sleeve",      "desc": "+8% rare weight reduction",    "icon": "🃏", "cost": 3000.0,      "effect": "rare",      "value": 0.08, "unlock_at": 1000.0},
+	{"id": "u3", "name": "Magnifying Glass", "desc": "+10% ultra rare chance",       "icon": "🔍", "cost": 15000.0,     "effect": "ultra",     "value": 0.10, "unlock_at": 6000.0},
+	{"id": "u4", "name": "Price Guide Book", "desc": "+12% rare weight reduction",   "icon": "📖", "cost": 100000.0,    "effect": "rare",      "value": 0.12, "unlock_at": 40000.0},
+	{"id": "u5", "name": "Special Order",    "desc": "+6% secret rare chance",       "icon": "📬", "cost": 700000.0,    "effect": "secret",    "value": 0.06, "unlock_at": 250000.0},
+	{"id": "u6", "name": "Golden Wrapper",   "desc": "+10% secret rare chance",      "icon": "🎁", "cost": 5000000.0,   "effect": "secret",    "value": 0.10, "unlock_at": 1800000.0},
+	{"id": "u7", "name": "Secret Card Map",  "desc": "+3% legendary chance",         "icon": "🗺️",  "cost": 40000000.0,  "effect": "legendary", "value": 0.03, "unlock_at": 12000000.0},
 ]
 
 var CARDS: Array = []
@@ -231,6 +252,16 @@ func _build_cards():
 			})
 			card_index += 1
 			move_index += 1
+
+func roll_variation(rarity: String) -> String:
+	var weights = VARIATION_WEIGHTS.get(rarity, {"normal": 1.0})
+	var r = randf()
+	var cumul = 0.0
+	for v in [VARIATION_NORMAL, VARIATION_SHINY, VARIATION_FULL_ART]:
+		cumul += weights.get(v, 0.0)
+		if r < cumul:
+			return v
+	return VARIATION_FULL_ART
 
 func get_card_by_name(card_name: String) -> Dictionary:
 	for card in CARDS:

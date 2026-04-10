@@ -3,7 +3,7 @@ extends Control
 signal card_selected(card: Dictionary)
 
 const COLS = 4
-const RARITY_FILTERS = ["all", "common", "uncommon", "rare", "holo", "ultra", "secret"]
+const RARITY_FILTERS = ["all", "common", "uncommon", "rare", "ultra", "secret", "legendary"]
 
 var _filter: String = "all"
 var _grid: GridContainer
@@ -138,8 +138,9 @@ func _rebuild_grid() -> void:
 			cards_to_show.append(card)
 
 	for card in cards_to_show:
-		var owned = GameState.collected.get(card["name"], 0)
-		var dex_card = CardWidgets.make_dex_card(card, owned)
+		var owned        = GameState.get_card_total_owned(card["name"])
+		var best_variant = GameState.get_card_best_variant(card["name"])
+		var dex_card     = CardWidgets.make_dex_card(card, owned, best_variant)
 		if owned > 0:
 			dex_card.gui_input.connect(_on_card_gui_input.bind(card))
 			dex_card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
