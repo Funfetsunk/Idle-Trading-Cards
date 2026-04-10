@@ -50,6 +50,10 @@ static func make_big_card(card: Dictionary, owned_count: int = 0) -> Control:
 	var m2_name = CardDatabase.MOVE_NAMES[m2_idx]
 	var m2_desc = CardDatabase.MOVE_DESCS[m2_idx]
 
+	# ── Full Art variant: art fills card, all content overlays ───────────
+	if variation == "full_art":
+		return _make_big_card_full_art(card, tc, type_bg, type_art, foot_tc, rlabel, m2_name, m2_desc, stats)
+
 	# ── Root: rarity colour background, silver border ─────────────────
 	var root = PanelContainer.new()
 	root.custom_minimum_size = Vector2(300, 0)
@@ -442,3 +446,229 @@ static func make_dex_card(card: Dictionary, owned: int = 0, best_variant: String
 		vbox.add_child(lbl_var)
 
 	return root
+
+# ── Full Art BigCard ──────────────────────────────────────────────────────────
+# Art fills the entire card interior; all content overlays without section panels.
+# Per-card text colour: set card["full_art_text_color"] = Color(...) when adding
+# custom art so text remains readable against that specific artwork.
+
+static func _make_big_card_full_art(card: Dictionary, tc: Color, type_bg: Color, type_art: Color, foot_tc: Color, rlabel: String, m2_name: String, m2_desc: String, stats: Dictionary) -> Control:
+	var type      = card.get("type", CardDatabase.TYPE_EARTH)
+	var variation = card.get("variation", "full_art")
+
+	# Per-card text colour override — default white works on most dark art.
+	# Set card["full_art_text_color"] per card once custom artwork is added.
+	var fat_tc  : Color = card.get("full_art_text_color", Color.WHITE)
+	var fat_tc2 : Color = Color(fat_tc.r, fat_tc.g, fat_tc.b, 0.75)
+
+	var var_badge = " 🎨" if variation == "full_art" else (" ✨" if variation == "shiny" else "")
+
+	# Root: thin margins so art is nearly edge-to-edge behind the border
+	var root = PanelContainer.new()
+	root.custom_minimum_size = Vector2(300, 0)
+	var root_style = StyleBoxFlat.new()
+	root_style.bg_color     = type_bg
+	root_style.border_color = Color("#B0B0B0")
+	root_style.set_border_width_all(2)
+	root_style.set_corner_radius_all(12)
+	root_style.content_margin_left   = 4
+	root_style.content_margin_right  = 4
+	root_style.content_margin_top    = 4
+	root_style.content_margin_bottom = 4
+	root.add_theme_stylebox_override("panel", root_style)
+
+	# Art panel fills entire inner area
+	var art_panel = PanelContainer.new()
+	art_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var art_style = StyleBoxFlat.new()
+	art_style.bg_color = type_art
+	art_style.set_corner_radius_all(8)
+	art_style.content_margin_left   = 0
+	art_style.content_margin_right  = 0
+	art_style.content_margin_top    = 0
+	art_style.content_margin_bottom = 0
+	art_panel.add_theme_stylebox_override("panel", art_style)
+	root.add_child(art_panel)
+
+	# Overlay: fills art panel
+	var overlay = Control.new()
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	art_panel.add_child(overlay)
+
+	# Placeholder art letter — large, very faint, centred
+	var art_lbl = Label.new()
+	art_lbl.text = card.get("name", "?")[0]
+	art_lbl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	art_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	art_lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+	art_lbl.add_theme_font_size_override("font_size", 120)
+	art_lbl.add_theme_color_override("font_color", Color(tc.r, tc.g, tc.b, 0.25))
+	overlay.add_child(art_lbl)
+
+	# Content VBox inset from the overlay edges
+	var content = VBoxContainer.new()
+	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	content.offset_left   = 10
+	content.offset_right  = -10
+	content.offset_top    = 10
+	content.offset_bottom = -10
+	content.add_theme_constant_override("separation", 5)
+	overlay.add_child(content)
+
+	# ── Header: name (left) | HP + type (right) ──────────────────────────
+	var header = HBoxContainer.new()
+	content.add_child(header)
+
+	var lbl_name = Label.new()
+	lbl_name.text = card.get("name", "???")
+	lbl_name.add_theme_font_size_override("font_size", 16)
+	lbl_name.add_theme_color_override("font_color", fat_tc)
+	lbl_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(lbl_name)
+
+	var header_right = VBoxContainer.new()
+	header_right.add_theme_constant_override("separation", 0)
+	header.add_child(header_right)
+
+	var lbl_hp = Label.new()
+	lbl_hp.text = "HP %d" % stats.get("health", 0)
+	lbl_hp.add_theme_font_size_override("font_size", 13)
+	lbl_hp.add_theme_color_override("font_color", fat_tc)
+	lbl_hp.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	header_right.add_child(lbl_hp)
+
+	var lbl_type_lbl = Label.new()
+	lbl_type_lbl.text = CardDatabase.TYPE_LABELS.get(type, "—")
+	lbl_type_lbl.add_theme_font_size_override("font_size", 10)
+	lbl_type_lbl.add_theme_color_override("font_color", fat_tc2)
+	lbl_type_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	header_right.add_child(lbl_type_lbl)
+
+	# ── Spacer: art shows through the middle ──────────────────────────────
+	var spacer = Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content.add_child(spacer)
+
+	# ── Stats grid (2-col, no background) ────────────────────────────────
+	var stat_names  = ["health", "attack", "defence", "luck"]
+	var stat_labels = ["Health", "Attack", "Defence", "Luck"]
+	var stat_icons  = ["❤", "⚔", "🛡", "✦"]
+	var stat_colors = [Color("#E74C3C"), Color("#E67E22"), Color("#3498DB"), Color("#2ECC71")]
+
+	var stat_max = 0
+	var stat_min = 999
+	for sn in stat_names:
+		var v = stats.get(sn, 0)
+		stat_max = maxi(stat_max, v)
+		stat_min = mini(stat_min, v)
+
+	var stat_grid = GridContainer.new()
+	stat_grid.columns = 2
+	stat_grid.add_theme_constant_override("h_separation", 10)
+	stat_grid.add_theme_constant_override("v_separation", 3)
+	content.add_child(stat_grid)
+
+	for si in range(stat_names.size()):
+		var val  = stats.get(stat_names[si], 0)
+		var cell = HBoxContainer.new()
+		cell.add_theme_constant_override("separation", 3)
+		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		stat_grid.add_child(cell)
+
+		var lbl_icon = Label.new()
+		lbl_icon.text = stat_icons[si]
+		lbl_icon.add_theme_font_size_override("font_size", 11)
+		cell.add_child(lbl_icon)
+
+		var lbl_sname = Label.new()
+		lbl_sname.text = stat_labels[si]
+		lbl_sname.add_theme_font_size_override("font_size", 11)
+		lbl_sname.add_theme_color_override("font_color", fat_tc2)
+		lbl_sname.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		cell.add_child(lbl_sname)
+
+		var val_color = stat_colors[si]
+		if val == stat_max and stat_max != stat_min:
+			val_color = Color("#0F6E56")
+		elif val == stat_min and stat_max != stat_min:
+			val_color = Color("#A32D2D")
+
+		var lbl_val = Label.new()
+		lbl_val.text = str(val)
+		lbl_val.add_theme_font_size_override("font_size", 12)
+		lbl_val.add_theme_color_override("font_color", val_color)
+		cell.add_child(lbl_val)
+
+	var sep = HSeparator.new()
+	content.add_child(sep)
+
+	# ── Moves (no background) ─────────────────────────────────────────────
+	_add_move_row_fat(content, card.get("move_name", "Tackle"), card.get("move_desc", "A basic attack."), fat_tc, fat_tc2)
+	_add_move_row_fat(content, m2_name, m2_desc, fat_tc, fat_tc2)
+
+	# ── Footer ────────────────────────────────────────────────────────────
+	var footer = HBoxContainer.new()
+	footer.add_theme_constant_override("separation", 4)
+	content.add_child(footer)
+
+	var footer_left = VBoxContainer.new()
+	footer_left.add_theme_constant_override("separation", 0)
+	footer.add_child(footer_left)
+
+	var lbl_set = Label.new()
+	lbl_set.text = "Base Set"
+	lbl_set.add_theme_font_size_override("font_size", 8)
+	lbl_set.add_theme_color_override("font_color", fat_tc2)
+	footer_left.add_child(lbl_set)
+
+	var lbl_rarity = Label.new()
+	lbl_rarity.text = rlabel + var_badge
+	lbl_rarity.add_theme_font_size_override("font_size", 9)
+	lbl_rarity.add_theme_color_override("font_color", fat_tc)
+	footer_left.add_child(lbl_rarity)
+
+	var footer_centre = VBoxContainer.new()
+	footer_centre.add_theme_constant_override("separation", 0)
+	footer_centre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	footer.add_child(footer_centre)
+
+	var lbl_designer = Label.new()
+	lbl_designer.text = "Design: —"
+	lbl_designer.add_theme_font_size_override("font_size", 8)
+	lbl_designer.add_theme_color_override("font_color", fat_tc2)
+	lbl_designer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	footer_centre.add_child(lbl_designer)
+
+	var lbl_illustrator = Label.new()
+	lbl_illustrator.text = "Art: —"
+	lbl_illustrator.add_theme_font_size_override("font_size", 8)
+	lbl_illustrator.add_theme_color_override("font_color", fat_tc2)
+	lbl_illustrator.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	footer_centre.add_child(lbl_illustrator)
+
+	var lbl_num = Label.new()
+	lbl_num.text = "#%03d / %d" % [card.get("number", 1), CardDatabase.total_cards()]
+	lbl_num.add_theme_font_size_override("font_size", 9)
+	lbl_num.add_theme_color_override("font_color", fat_tc2)
+	lbl_num.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	footer.add_child(lbl_num)
+
+	return root
+
+static func _add_move_row_fat(parent: Control, move_name: String, move_desc: String, primary: Color, secondary: Color) -> void:
+	var move_vbox = VBoxContainer.new()
+	move_vbox.add_theme_constant_override("separation", 1)
+	parent.add_child(move_vbox)
+
+	var lbl_move_name = Label.new()
+	lbl_move_name.text = "⚡ " + move_name
+	lbl_move_name.add_theme_font_size_override("font_size", 12)
+	lbl_move_name.add_theme_color_override("font_color", primary)
+	move_vbox.add_child(lbl_move_name)
+
+	var lbl_move_desc = Label.new()
+	lbl_move_desc.text = move_desc
+	lbl_move_desc.add_theme_font_size_override("font_size", 10)
+	lbl_move_desc.add_theme_color_override("font_color", secondary)
+	lbl_move_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	move_vbox.add_child(lbl_move_desc)

@@ -751,7 +751,9 @@ func _on_dex_card_selected(card: Dictionary) -> void:
 	var owned_list: Array = []
 	for c in CardDatabase.CARDS:
 		if GameState.get_card_total_owned(c["name"]) > 0:
-			owned_list.append(c)
+			var entry = c.duplicate()
+			entry["variation"] = GameState.get_card_best_variant(c["name"])
+			owned_list.append(entry)
 	_cardviewer.open_card(card, owned_list)
 
 func _on_reset_pressed() -> void:
