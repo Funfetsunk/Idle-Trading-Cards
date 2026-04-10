@@ -82,6 +82,102 @@ const VARIATION_WEIGHTS = {
 	"legendary": {"full_art": 1.0},
 }
 
+# ── Card types ───────────────────────────────────────────────────────────────
+
+const TYPE_FIRE  = "fire"
+const TYPE_WATER = "water"
+const TYPE_WIND  = "wind"
+const TYPE_EARTH = "earth"
+const TYPE_LIGHT = "light"
+const TYPE_DARK  = "dark"
+
+const TYPE_LABELS = {
+	TYPE_FIRE:  "Fire",
+	TYPE_WATER: "Water",
+	TYPE_WIND:  "Wind",
+	TYPE_EARTH: "Earth",
+	TYPE_LIGHT: "Light",
+	TYPE_DARK:  "Dark",
+}
+
+# Card background colour per type
+const TYPE_COLORS = {
+	TYPE_FIRE:  Color("#C0392B"),
+	TYPE_WATER: Color("#2471A3"),
+	TYPE_WIND:  Color("#85C1E9"),
+	TYPE_EARTH: Color("#7D5A3C"),
+	TYPE_LIGHT: Color("#D4AC0D"),
+	TYPE_DARK:  Color("#1C2833"),
+}
+
+# Art panel background per type (lighter shade)
+const TYPE_ART_BG_COLORS = {
+	TYPE_FIRE:  Color("#F0A28A"),
+	TYPE_WATER: Color("#85C1E9"),
+	TYPE_WIND:  Color("#D5EAF5"),
+	TYPE_EARTH: Color("#C4A882"),
+	TYPE_LIGHT: Color("#FAE89A"),
+	TYPE_DARK:  Color("#4A4E69"),
+}
+
+# Type label colour for use on white section panels
+const TYPE_LABEL_COLORS = {
+	TYPE_FIRE:  Color("#C0392B"),
+	TYPE_WATER: Color("#2471A3"),
+	TYPE_WIND:  Color("#5D8AA8"),
+	TYPE_EARTH: Color("#7D5A3C"),
+	TYPE_LIGHT: Color("#B7860B"),
+	TYPE_DARK:  Color("#4A4E69"),
+}
+
+# Footer text colour — dark for light bg types, white for dark bg types
+const TYPE_FOOTER_TEXT_COLORS = {
+	TYPE_FIRE:  Color.WHITE,
+	TYPE_WATER: Color.WHITE,
+	TYPE_WIND:  Color("#1A1A1A"),
+	TYPE_EARTH: Color.WHITE,
+	TYPE_LIGHT: Color("#1A1A1A"),
+	TYPE_DARK:  Color.WHITE,
+}
+
+# Every card name mapped to its type
+const CARD_TYPES = {
+	# Fire (13)
+	"Grumplet": TYPE_FIRE, "Sparktail": TYPE_FIRE, "Flampling": TYPE_FIRE,
+	"Fizzwick": TYPE_FIRE, "Emberpaw": TYPE_FIRE, "Thundertail": TYPE_FIRE,
+	"Ashwhisker": TYPE_FIRE, "Boulderpaw": TYPE_FIRE, "Cinderkit": TYPE_FIRE,
+	"Blazethorn": TYPE_FIRE, "Pyrespine": TYPE_FIRE, "Crimsontail": TYPE_FIRE,
+	"Solarispine": TYPE_FIRE,
+	# Water (12)
+	"Snorkel": TYPE_WATER, "Wobblefin": TYPE_WATER, "Frogling": TYPE_WATER,
+	"Shellsworth": TYPE_WATER, "Gloopfish": TYPE_WATER, "Blubbersnap": TYPE_WATER,
+	"Squelchmore": TYPE_WATER, "Glacierpup": TYPE_WATER, "Tidesnout": TYPE_WATER,
+	"Aquashade": TYPE_WATER, "Tidecrest": TYPE_WATER, "Spectralfin": TYPE_WATER,
+	# Wind (13)
+	"Fluffalo": TYPE_WIND, "Twiglet": TYPE_WIND, "Driftpuff": TYPE_WIND,
+	"Whiskerbean": TYPE_WIND, "Noodlewing": TYPE_WIND, "Snuffleton": TYPE_WIND,
+	"Vortexkit": TYPE_WIND, "Stormtail": TYPE_WIND, "Mistfang": TYPE_WIND,
+	"Galewing": TYPE_WIND, "Stormveil": TYPE_WIND, "Eclipsewing": TYPE_WIND,
+	"Aethermaw": TYPE_WIND,
+	# Earth (13)
+	"Munchkin": TYPE_EARTH, "Rootsnap": TYPE_EARTH, "Pebblesnout": TYPE_EARTH,
+	"Puddingfoot": TYPE_EARTH, "Pamplemoose": TYPE_EARTH, "Grumbleleaf": TYPE_EARTH,
+	"Mossmaw": TYPE_EARTH, "Stoneback": TYPE_EARTH, "Brambleclaw": TYPE_EARTH,
+	"Thornback": TYPE_EARTH, "Terraveil": TYPE_EARTH, "Stonecrown": TYPE_EARTH,
+	"Ironmaw": TYPE_EARTH,
+	# Light (13)
+	"Gleamoth": TYPE_LIGHT, "Crinklenose": TYPE_LIGHT, "Wobblebug": TYPE_LIGHT,
+	"Bingleberry": TYPE_LIGHT, "Crystalfin": TYPE_LIGHT, "Frostveil": TYPE_LIGHT,
+	"Dawnpetal": TYPE_LIGHT, "Auroraling": TYPE_LIGHT, "Prismback": TYPE_LIGHT,
+	"Celestipaw": TYPE_LIGHT, "Luminescenthorn": TYPE_LIGHT, "Infinipaw": TYPE_LIGHT,
+	"The Shimmering One": TYPE_LIGHT,
+	# Dark (12)
+	"Boulderbutt": TYPE_DARK, "Dozelington": TYPE_DARK, "Clodsworth": TYPE_DARK,
+	"Duskwing": TYPE_DARK, "Cragfang": TYPE_DARK, "Cavewing": TYPE_DARK,
+	"Dungeonpup": TYPE_DARK, "Shadowfang": TYPE_DARK, "Voidwhisker": TYPE_DARK,
+	"Nebulaclaw": TYPE_DARK, "Chronofang": TYPE_DARK, "Omegaling": TYPE_DARK,
+}
+
 # ── Card names ────────────────────────────────────────────────────────────────
 
 const CARD_NAMES = {
@@ -245,6 +341,7 @@ func _build_cards():
 				"index":     card_index,
 				"name":      card_name,
 				"rarity":    rarity,
+				"type":      CARD_TYPES.get(card_name, TYPE_EARTH),
 				"stats":     _gen_stats(card_index, rarity),
 				"move_name": MOVE_NAMES[move_index] if move_index < MOVE_NAMES.size() else "Tackle",
 				"move_desc": MOVE_DESCS[move_index] if move_index < MOVE_DESCS.size() else "A basic attack.",
