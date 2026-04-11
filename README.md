@@ -19,7 +19,7 @@ The game has a warm, pocket-money tone — think childhood economics meets tradi
 - **Manual tapping** earns 0.1 fl per tap
 - **Chores** provide passive fl/sec income — hire more copies to scale up
 - **4 pack tiers**: Basic, Silver, Gold, and Legendary — each with better pull rates
-- **76 collectible cards** across 6 rarities: Common, Uncommon, Rare, Ultra Rare, Secret Rare, and Legendary
+- **76 collectible cards** across 6 rarities: Common, Uncommon, Rare, Holo Rare, Ultra Rare, and Secret Rare
 - **Card variations**: every pull has a chance to be Normal, Shiny, or Full Art depending on rarity
 - **Floridex**: browse and view your full card collection
 - **Dupe selling**: sell sets of 50 duplicate cards for 100 fl each
@@ -31,9 +31,9 @@ The game has a warm, pocket-money tone — think childhood economics meets tradi
 | Rarity | Base chance |
 |--------|-------------|
 | Rare | 72% |
-| Ultra Rare | 20% |
-| Secret Rare | 7% |
-| Legendary | 1% |
+| Holo Rare | 20% |
+| Ultra Rare | 7% |
+| Secret Rare | 1% |
 
 ### Card Variations
 
@@ -41,7 +41,7 @@ The game has a warm, pocket-money tone — think childhood economics meets tradi
 |-----------|------------------|--------------------|
 | Normal | All | Most likely |
 | Shiny | Common → Secret Rare | Uncommon |
-| Full Art | Ultra Rare, Secret Rare, Legendary | Rare (Legendary always Full Art) |
+| Full Art | Ultra Rare, Secret Rare | Rare |
 
 ---
 
@@ -49,6 +49,7 @@ The game has a warm, pocket-money tone — think childhood economics meets tradi
 
 - **Engine**: Godot 4.5
 - **Language**: GDScript
+- **Target platform**: Android (portrait, ETC2/ASTC texture compression), iOS planned
 - **Target resolution**: 390×844 (iPhone 14 base), scales for Android via `canvas_items` stretch
 - **UI**: fully programmatic — all UI built in GDScript, no complex `.tscn` authoring
 - **Save system**: JSON saved to `user://save.json`, auto-saves every 30 seconds
@@ -71,8 +72,7 @@ res://
 │   ├── Floridex.gd            # Full-screen card collection browser overlay
 │   ├── CardViewer.gd          # Full-screen individual card viewer overlay
 │   └── CardWidgets.gd         # Static class — reusable card UI builders
-└── research/
-    └── idle_game_progression.md  # Design research on idle game pacing and retention
+└── project.godot
 ```
 
 ---
@@ -90,9 +90,9 @@ res://
 
 ## Development Status
 
-Early prototype — core gameplay loop is fully functional. The following are planned for future updates:
+Fully functional prototype — the complete idle loop is implemented and the game is playable end-to-end. Android export is configured. The following are planned for future updates:
 
 - Custom illustrated card art
-- iOS build
 - Visual polish and animations
+- iOS build
 - Game balance tuning
