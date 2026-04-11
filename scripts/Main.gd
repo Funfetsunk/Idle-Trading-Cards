@@ -8,7 +8,12 @@ var _lbl_save_time:  Label
 var _btn_floridex:   Button
 var _lbl_tap_count:  Label
 
+const CHORES_PER_PAGE = 4
 var _chore_rows:     Array = []  # [{panel, lbl_count, lbl_cost, lbl_rate, btn_buy}]
+var _chore_page:     int   = 0
+var _btn_chore_prev: Button
+var _btn_chore_next: Button
+var _lbl_chore_page: Label
 var _pack_cards:     Array = []  # [{lbl_savings, lbl_cost, bar, btn_open, lbl_event}]
 var _pack_tweens:    Array = []
 
@@ -227,6 +232,7 @@ func _build_chore_section(parent: Control) -> void:
 
 		var panel = PanelContainer.new()
 		panel.add_theme_stylebox_override("panel", _card_style())
+		panel.visible = false  # controlled by pagination
 		section.add_child(panel)
 
 		var hbox = HBoxContainer.new()
@@ -285,6 +291,31 @@ func _build_chore_section(parent: Control) -> void:
 		row_data["panel"]   = panel
 
 		_chore_rows.append(row_data)
+
+	# Pagination controls
+	var page_bar = HBoxContainer.new()
+	page_bar.add_theme_constant_override("separation", 8)
+	page_bar.alignment = BoxContainer.ALIGNMENT_CENTER
+	section.add_child(page_bar)
+
+	_btn_chore_prev = _make_btn("< Prev", C_TEXT2)
+	_btn_chore_prev.add_theme_font_size_override("font_size", 11)
+	_btn_chore_prev.custom_minimum_size = Vector2(64, 0)
+	_btn_chore_prev.pressed.connect(_on_chore_prev)
+	page_bar.add_child(_btn_chore_prev)
+
+	_lbl_chore_page = Label.new()
+	_lbl_chore_page.add_theme_font_size_override("font_size", 11)
+	_lbl_chore_page.add_theme_color_override("font_color", C_TEXT3)
+	_lbl_chore_page.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_lbl_chore_page.custom_minimum_size = Vector2(80, 0)
+	page_bar.add_child(_lbl_chore_page)
+
+	_btn_chore_next = _make_btn("Next >", C_TEXT2)
+	_btn_chore_next.add_theme_font_size_override("font_size", 11)
+	_btn_chore_next.custom_minimum_size = Vector2(64, 0)
+	_btn_chore_next.pressed.connect(_on_chore_next)
+	page_bar.add_child(_btn_chore_next)
 
 # ── Pack section ──────────────────────────────────────────────────────────────
 
@@ -539,6 +570,7 @@ func _connect_signals() -> void:
 	GameState.dupes_changed.connect(_on_dupes_changed)
 	GameState.upgrades_changed.connect(_on_upgrades_changed)
 	GameState.chores_changed.connect(_on_chores_changed)
+	GameState.chore_milestone.connect(_on_chore_milestone)
 	GameState.state_reset.connect(_full_refresh)
 
 # ── Full refresh ──────────────────────────────────────────────────────────────
@@ -566,40 +598,57 @@ func _update_tap_count() -> void:
 
 func _update_chores() -> void:
 	var total_earned = GameState.total_earned
-	var locked_shown = 0
+	var total_pages  = int(ceil(float(_chore_rows.size()) / CHORES_PER_PAGE))
+	_chore_page = clampi(_chore_page, 0, total_pages - 1)
+
+	var page_start = _chore_page * CHORES_PER_PAGE
+	var page_end   = mini(page_start + CHORES_PER_PAGE, _chore_rows.size())
 
 	for i in range(_chore_rows.size()):
+		var rd = _chore_rows[i]
+		# Only show rows on the current page
+		if i < page_start or i >= page_end:
+			rd["panel"].visible = false
+			continue
+
 		var chore    = CardDatabase.CHORES[i]
-		var rd       = _chore_rows[i]
 		var count    = GameState.chore_counts[i]
 		var cost     = GameState.get_chore_cost(i)
 		var unlocked = total_earned >= chore["unlock_at"]
 		var can_buy  = GameState.florins >= cost and unlocked
 
+		rd["panel"].visible = true
+
 		if not unlocked:
-			# Show the next 2 locked chores as teasers; hide the rest
-			if locked_shown < 2:
-				locked_shown += 1
-				rd["panel"].visible = true
-				rd["panel"].modulate = Color(0.75, 0.75, 0.75, 1.0)
-				rd["lbl_rate"].text  = "🔒 Unlocks at %s fl earned" % NumberFormatter.fmt(chore["unlock_at"])
-				rd["lbl_count"].text = ""
-				rd["lbl_cost"].text  = ""
-				rd["btn_buy"].text   = "Locked"
-				rd["btn_buy"].disabled = true
-			else:
-				rd["panel"].visible = false
+			rd["panel"].modulate   = Color(0.75, 0.75, 0.75, 1.0)
+			rd["lbl_rate"].text    = "🔒 Unlocks at %s fl earned" % NumberFormatter.fmt(chore["unlock_at"])
+			rd["lbl_count"].text   = ""
+			rd["lbl_cost"].text    = ""
+			rd["btn_buy"].text     = "Locked"
+			rd["btn_buy"].disabled = true
 			continue
 
-		# Unlocked — restore normal appearance
-		rd["panel"].visible  = true
-		rd["panel"].modulate = Color.WHITE
-		rd["btn_buy"].text   = "Hire"
-		var fl_contribution  = chore["fl_per_sec"] * count
-		rd["lbl_count"].text = "Owned: %d" % count
-		rd["lbl_rate"].text  = "+%s fl/s" % NumberFormatter.fmt(fl_contribution) if count > 0 else "%s fl/s each" % NumberFormatter.fmt(chore["fl_per_sec"])
-		rd["lbl_cost"].text  = NumberFormatter.fmt(cost) + " fl"
+		rd["panel"].modulate   = Color.WHITE
+		rd["btn_buy"].text     = "Hire"
+		rd["lbl_cost"].text    = NumberFormatter.fmt(cost) + " fl"
 		rd["btn_buy"].disabled = not can_buy
+
+		var mult = GameState.chore_milestone_mult(count)
+		var fl_contribution = chore["fl_per_sec"] * count * mult
+		if count == 0:
+			rd["lbl_rate"].text  = "%s fl/s each" % NumberFormatter.fmt(chore["fl_per_sec"])
+			rd["lbl_count"].text = ""
+		else:
+			rd["lbl_rate"].text  = "+%s fl/s" % NumberFormatter.fmt(fl_contribution)
+			if mult > 1.0:
+				rd["lbl_count"].text = "Owned: %d  ×%d bonus" % [count, int(mult)]
+			else:
+				rd["lbl_count"].text = "Owned: %d" % count
+
+	# Update pagination controls
+	_lbl_chore_page.text       = "Page %d / %d" % [_chore_page + 1, total_pages]
+	_btn_chore_prev.disabled   = _chore_page <= 0
+	_btn_chore_next.disabled   = _chore_page >= total_pages - 1
 
 func _update_packs() -> void:
 	var total_earned = GameState.total_earned
@@ -779,6 +828,20 @@ func _on_tap_pressed(btn: Button) -> void:
 func _on_buy_chore(idx: int) -> void:
 	GameState.buy_chore(idx)
 
+func _on_chore_prev() -> void:
+	_chore_page -= 1
+	_update_chores()
+
+func _on_chore_next() -> void:
+	_chore_page += 1
+	_update_chores()
+
+func _on_chore_milestone(chore_name: String, count: int) -> void:
+	var mult_text = "×2" if count == 10 else ("×10" if count == 25 else "×250")
+	var msg = "%s — %d hired! Production %s!" % [chore_name, count, mult_text]
+	GameState.add_log("🏆 " + msg)
+	_show_event_banner("🏆 " + msg, Color("#185FA5"), 3.5)
+
 func _on_open_pack(idx: int) -> void:
 	GameState.open_pack(idx)
 
@@ -819,28 +882,33 @@ func _do_reset() -> void:
 
 # Centred full-width banner that fades after `duration` seconds.
 func _show_event_banner(text: String, bg: Color, duration: float) -> void:
-	var banner = PanelContainer.new()
-	var style  = StyleBoxFlat.new()
-	style.bg_color = bg
-	style.content_margin_left   = 16
-	style.content_margin_right  = 16
-	style.content_margin_top    = 12
-	style.content_margin_bottom = 12
-	banner.add_theme_stylebox_override("panel", style)
-	banner.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	banner.offset_top    = 80
-	banner.offset_bottom = 130
-	banner.offset_left   = 20
-	banner.offset_right  = -20
-	banner.mouse_filter  = Control.MOUSE_FILTER_IGNORE
+	var vp_w = get_viewport().get_visible_rect().size.x
+
+	# Use a plain Control so we can set position/size directly without
+	# anchor or container layout interfering.
+	var banner = Control.new()
+	banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	banner.position     = Vector2(20, 80)
+	banner.size         = Vector2(vp_w - 40, 50)
 	_float_layer.add_child(banner)
+
+	var bg_panel = Panel.new()
+	var style    = StyleBoxFlat.new()
+	style.bg_color = bg
+	style.set_corner_radius_all(6)
+	bg_panel.add_theme_stylebox_override("panel", style)
+	bg_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bg_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	banner.add_child(bg_panel)
 
 	var lbl = Label.new()
 	lbl.text = text
-	lbl.add_theme_font_size_override("font_size", 20)
+	lbl.add_theme_font_size_override("font_size", 16)
 	lbl.add_theme_color_override("font_color", Color.WHITE)
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+	lbl.autowrap_mode        = TextServer.AUTOWRAP_WORD_SMART
+	lbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
 	lbl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	banner.add_child(lbl)
 

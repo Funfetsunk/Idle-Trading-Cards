@@ -8,6 +8,7 @@ signal log_updated(lines: Array)
 signal dupes_changed(total: int)
 signal upgrades_changed()
 signal chores_changed()
+signal chore_milestone(chore_name: String, count: int)
 signal state_reset()
 
 const TAP_EARN = 0.1
@@ -68,8 +69,15 @@ func _process(delta: float) -> void:
 func get_fl_per_sec() -> float:
 	var rate = 0.0
 	for i in range(CardDatabase.CHORES.size()):
-		rate += CardDatabase.CHORES[i]["fl_per_sec"] * chore_counts[i]
+		rate += CardDatabase.CHORES[i]["fl_per_sec"] * chore_counts[i] * chore_milestone_mult(chore_counts[i])
 	return rate
+
+func chore_milestone_mult(count: int) -> float:
+	var mult = 1.0
+	if count >= 50: mult *= 25.0
+	if count >= 25: mult *= 5.0
+	if count >= 10: mult *= 2.0
+	return mult
 
 func get_chore_cost(idx: int) -> float:
 	var c = CardDatabase.CHORES[idx]
@@ -84,7 +92,8 @@ func add_florins(amount: float) -> void:
 	florins      += amount
 	total_earned += amount
 	for i in range(pack_state.size()):
-		pack_state[i]["savings"] += amount
+		if total_earned >= CardDatabase.PACKS[i]["unlock_at"]:
+			pack_state[i]["savings"] += amount
 	florins_changed.emit(florins)
 
 func tap() -> void:
@@ -92,7 +101,8 @@ func tap() -> void:
 	total_earned += TAP_EARN
 	tap_count    += 1
 	for i in range(pack_state.size()):
-		pack_state[i]["savings"] += TAP_EARN
+		if total_earned >= CardDatabase.PACKS[i]["unlock_at"]:
+			pack_state[i]["savings"] += TAP_EARN
 	florins_changed.emit(florins)
 
 func buy_chore(idx: int) -> bool:
@@ -105,6 +115,10 @@ func buy_chore(idx: int) -> bool:
 	rate_changed.emit(get_fl_per_sec())
 	chores_changed.emit()
 	add_log("Hired: " + CardDatabase.CHORES[idx]["name"])
+	# Fire milestone signal if this purchase hit a milestone count
+	var count = chore_counts[idx]
+	if count in [10, 25, 50]:
+		chore_milestone.emit(CardDatabase.CHORES[idx]["name"], count)
 	SaveManager.save()
 	return true
 

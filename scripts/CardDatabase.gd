@@ -286,31 +286,39 @@ const MOVE_DESCS = [
 ]
 
 const CHORES = [
-	{"id": "sibling",  "name": "Little Sibling Helper",       "icon": "👦", "base_cost": 5.0,       "fl_per_sec": 0.3,    "cost_mult": 1.15, "unlock_at": 0.0},
-	{"id": "bins",     "name": "Take Out the Bins",            "icon": "🗑️",  "base_cost": 30.0,      "fl_per_sec": 1.1,    "cost_mult": 1.20, "unlock_at": 10.0},
-	{"id": "dog",      "name": "Walk the Neighbour's Dog",     "icon": "🐕", "base_cost": 180.0,     "fl_per_sec": 5.0,    "cost_mult": 1.24, "unlock_at": 80.0},
-	{"id": "lawn",     "name": "Mow the Lawn",                 "icon": "🌿", "base_cost": 1200.0,    "fl_per_sec": 18.0,   "cost_mult": 1.27, "unlock_at": 500.0},
-	{"id": "lemonade", "name": "Run a Lemonade Stand",         "icon": "🍋", "base_cost": 8000.0,    "fl_per_sec": 60.0,   "cost_mult": 1.30, "unlock_at": 3000.0},
-	{"id": "babysit",  "name": "Babysitting Round",            "icon": "👶", "base_cost": 60000.0,   "fl_per_sec": 220.0,  "cost_mult": 1.32, "unlock_at": 20000.0},
-	{"id": "carwash",  "name": "Neighbourhood Car Wash",       "icon": "🚗", "base_cost": 500000.0,  "fl_per_sec": 800.0,  "cost_mult": 1.35, "unlock_at": 150000.0},
-	{"id": "carboot",  "name": "Car Boot Sale Empire",         "icon": "🏪", "base_cost": 4000000.0, "fl_per_sec": 3200.0, "cost_mult": 1.38, "unlock_at": 1500000.0},
+	{"id": "sibling",   "name": "Little Sibling Helper",    "icon": "👦", "base_cost": 5.0,            "fl_per_sec": 0.3,      "cost_mult": 1.15, "unlock_at": 0.0},
+	{"id": "paperound", "name": "Paper Round",               "icon": "📰", "base_cost": 25.0,           "fl_per_sec": 0.9,      "cost_mult": 1.17, "unlock_at": 8.0},
+	{"id": "bins",      "name": "Take Out the Bins",         "icon": "🗑️",  "base_cost": 80.0,           "fl_per_sec": 2.0,      "cost_mult": 1.19, "unlock_at": 30.0},
+	{"id": "dog",       "name": "Walk the Neighbour's Dog",  "icon": "🐕", "base_cost": 400.0,          "fl_per_sec": 6.0,      "cost_mult": 1.22, "unlock_at": 150.0},
+	{"id": "yardsale",  "name": "Weekend Yard Sale",         "icon": "🏷️",  "base_cost": 2000.0,         "fl_per_sec": 15.0,     "cost_mult": 1.25, "unlock_at": 800.0},
+	{"id": "lawn",      "name": "Mow the Lawn",              "icon": "🌿", "base_cost": 8000.0,         "fl_per_sec": 30.0,     "cost_mult": 1.27, "unlock_at": 3000.0},
+	{"id": "baking",    "name": "Run a Bake Sale",           "icon": "🍰", "base_cost": 35000.0,        "fl_per_sec": 80.0,     "cost_mult": 1.29, "unlock_at": 12000.0},
+	{"id": "lemonade",  "name": "Run a Lemonade Stand",      "icon": "🍋", "base_cost": 120000.0,       "fl_per_sec": 180.0,    "cost_mult": 1.31, "unlock_at": 45000.0},
+	{"id": "tutoring",  "name": "Tutoring Sessions",         "icon": "📚", "base_cost": 500000.0,       "fl_per_sec": 400.0,    "cost_mult": 1.33, "unlock_at": 180000.0},
+	{"id": "babysit",   "name": "Babysitting Round",         "icon": "👶", "base_cost": 2000000.0,      "fl_per_sec": 900.0,    "cost_mult": 1.34, "unlock_at": 750000.0},
+	{"id": "carwash",   "name": "Neighbourhood Car Wash",    "icon": "🚗", "base_cost": 8000000.0,      "fl_per_sec": 2000.0,   "cost_mult": 1.36, "unlock_at": 3000000.0},
+	{"id": "carboot",   "name": "Car Boot Sale Empire",      "icon": "🏪", "base_cost": 35000000.0,     "fl_per_sec": 5000.0,   "cost_mult": 1.38, "unlock_at": 12000000.0},
+	{"id": "delivery",  "name": "Food Delivery Round",       "icon": "🛵", "base_cost": 150000000.0,    "fl_per_sec": 12000.0,  "cost_mult": 1.39, "unlock_at": 60000000.0},
+	{"id": "market",    "name": "Market Stall Trader",       "icon": "🛒", "base_cost": 650000000.0,    "fl_per_sec": 30000.0,  "cost_mult": 1.41, "unlock_at": 300000000.0},
+	{"id": "onlineshop","name": "Online Resale Shop",        "icon": "💻", "base_cost": 3000000000.0,   "fl_per_sec": 80000.0,  "cost_mult": 1.43, "unlock_at": 1500000000.0},
+	{"id": "cardempire","name": "Trading Card Empire",       "icon": "🃏", "base_cost": 15000000000.0,  "fl_per_sec": 250000.0, "cost_mult": 1.45, "unlock_at": 8000000000.0},
 ]
 
 const PACKS = [
-	{"id": "basic",     "label": "Basic Pack",     "icon": "📦", "base_cost": 300.0,    "scale_factor": 1.8, "scale_every": 20, "unlock_at": 0.0},
-	{"id": "silver",    "label": "Silver Pack",    "icon": "🥈", "base_cost": 2500.0,   "scale_factor": 2.0, "scale_every": 15, "unlock_at": 5000.0},
-	{"id": "gold",      "label": "Gold Pack",      "icon": "🥇", "base_cost": 15000.0,  "scale_factor": 2.2, "scale_every": 10, "unlock_at": 40000.0},
-	{"id": "legendary", "label": "Legendary Pack", "icon": "✨", "base_cost": 150000.0, "scale_factor": 2.5, "scale_every": 5,  "unlock_at": 400000.0},
+	{"id": "basic",     "label": "Basic Pack",     "icon": "📦", "base_cost": 300.0,      "scale_factor": 1.8, "scale_every": 20, "unlock_at": 0.0},
+	{"id": "silver",    "label": "Silver Pack",    "icon": "🥈", "base_cost": 80000.0,    "scale_factor": 2.0, "scale_every": 15, "unlock_at": 30000.0},
+	{"id": "gold",      "label": "Gold Pack",      "icon": "🥇", "base_cost": 600000.0,   "scale_factor": 2.2, "scale_every": 10, "unlock_at": 400000.0},
+	{"id": "legendary", "label": "Legendary Pack", "icon": "✨", "base_cost": 8000000.0,  "scale_factor": 2.5, "scale_every": 5,  "unlock_at": 4000000.0},
 ]
 
 const UPGRADES = [
-	{"id": "u1", "name": "Lucky Bag",        "desc": "+5% ultra rare chance",        "icon": "🎒", "cost": 600.0,       "effect": "ultra",     "value": 0.05, "unlock_at": 200.0},
-	{"id": "u2", "name": "Foil Sleeve",      "desc": "+8% rare weight reduction",    "icon": "🃏", "cost": 3000.0,      "effect": "rare",      "value": 0.08, "unlock_at": 1000.0},
-	{"id": "u3", "name": "Magnifying Glass", "desc": "+10% ultra rare chance",       "icon": "🔍", "cost": 15000.0,     "effect": "ultra",     "value": 0.10, "unlock_at": 6000.0},
-	{"id": "u4", "name": "Price Guide Book", "desc": "+12% rare weight reduction",   "icon": "📖", "cost": 100000.0,    "effect": "rare",      "value": 0.12, "unlock_at": 40000.0},
-	{"id": "u5", "name": "Special Order",    "desc": "+6% secret rare chance",       "icon": "📬", "cost": 700000.0,    "effect": "secret",    "value": 0.06, "unlock_at": 250000.0},
-	{"id": "u6", "name": "Golden Wrapper",   "desc": "+10% secret rare chance",      "icon": "🎁", "cost": 5000000.0,   "effect": "secret",    "value": 0.10, "unlock_at": 1800000.0},
-	{"id": "u7", "name": "Secret Card Map",  "desc": "+3% legendary chance",         "icon": "🗺️",  "cost": 40000000.0,  "effect": "legendary", "value": 0.03, "unlock_at": 12000000.0},
+	{"id": "u1", "name": "Lucky Bag",        "desc": "+5% ultra rare chance",        "icon": "🎒", "cost": 4000.0,       "effect": "ultra",     "value": 0.05, "unlock_at": 1500.0},
+	{"id": "u2", "name": "Foil Sleeve",      "desc": "+8% rare weight reduction",    "icon": "🃏", "cost": 25000.0,      "effect": "rare",      "value": 0.08, "unlock_at": 8000.0},
+	{"id": "u3", "name": "Magnifying Glass", "desc": "+10% ultra rare chance",       "icon": "🔍", "cost": 150000.0,     "effect": "ultra",     "value": 0.10, "unlock_at": 50000.0},
+	{"id": "u4", "name": "Price Guide Book", "desc": "+12% rare weight reduction",   "icon": "📖", "cost": 1000000.0,    "effect": "rare",      "value": 0.12, "unlock_at": 350000.0},
+	{"id": "u5", "name": "Special Order",    "desc": "+6% secret rare chance",       "icon": "📬", "cost": 8000000.0,    "effect": "secret",    "value": 0.06, "unlock_at": 3000000.0},
+	{"id": "u6", "name": "Golden Wrapper",   "desc": "+10% secret rare chance",      "icon": "🎁", "cost": 60000000.0,   "effect": "secret",    "value": 0.10, "unlock_at": 25000000.0},
+	{"id": "u7", "name": "Secret Card Map",  "desc": "+3% legendary chance",         "icon": "🗺️",  "cost": 500000000.0,  "effect": "legendary", "value": 0.03, "unlock_at": 200000000.0},
 ]
 
 var CARDS: Array = []
