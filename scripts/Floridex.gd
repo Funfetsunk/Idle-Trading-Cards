@@ -149,6 +149,8 @@ func _rebuild_grid() -> void:
 func _on_card_gui_input(event: InputEvent, card: Dictionary) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		card_selected.emit(card)
+	elif event is InputEventScreenTouch and event.pressed:
+		card_selected.emit(card)
 
 func _on_filter(f: String) -> void:
 	_filter = f

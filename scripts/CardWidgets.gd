@@ -295,7 +295,7 @@ static func _add_move_row(parent: Control, move_name: String, move_desc: String,
 	move_vbox.add_child(lbl_move_desc)
 
 # ── SmallCard ─────────────────────────────────────────────────────────────────
-# Compact card thumbnail for pack reveal (100×150)
+# Compact card thumbnail for pack reveal — sized to fit 5 across a mobile screen
 
 static func make_small_card(card: Dictionary, is_dupe: bool = false) -> Control:
 	var rarity  = card.get("rarity", "common")
@@ -307,31 +307,31 @@ static func make_small_card(card: Dictionary, is_dupe: bool = false) -> Control:
 
 	# Root: type colour background, silver border — matches big card pattern
 	var root = PanelContainer.new()
-	root.custom_minimum_size = Vector2(100, 150)
+	root.custom_minimum_size = Vector2(64, 96)
 	var root_style = StyleBoxFlat.new()
 	root_style.bg_color     = bc
 	root_style.border_color = Color("#B0B0B0")
 	root_style.set_border_width_all(2)
-	root_style.set_corner_radius_all(8)
-	root_style.content_margin_left   = 6
-	root_style.content_margin_right  = 6
-	root_style.content_margin_top    = 6
-	root_style.content_margin_bottom = 6
+	root_style.set_corner_radius_all(6)
+	root_style.content_margin_left   = 4
+	root_style.content_margin_right  = 4
+	root_style.content_margin_top    = 4
+	root_style.content_margin_bottom = 4
 	root.add_theme_stylebox_override("panel", root_style)
 
 	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
+	vbox.add_theme_constant_override("separation", 3)
 	root.add_child(vbox)
 
 	# Art panel — lighter type shade, sits inside coloured card bg
 	var art = PanelContainer.new()
-	art.custom_minimum_size = Vector2(0, 80)
-	art.add_theme_stylebox_override("panel", flat_style(bgc, 6))
+	art.custom_minimum_size = Vector2(0, 50)
+	art.add_theme_stylebox_override("panel", flat_style(bgc, 4))
 	vbox.add_child(art)
 
 	var art_lbl = Label.new()
 	art_lbl.text = card.get("name", "???")[0]
-	art_lbl.add_theme_font_size_override("font_size", 36)
+	art_lbl.add_theme_font_size_override("font_size", 24)
 	art_lbl.add_theme_color_override("font_color", tc)
 	art_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	art_lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
@@ -341,7 +341,7 @@ static func make_small_card(card: Dictionary, is_dupe: bool = false) -> Control:
 	# Labels sit on the type-coloured background — use foot_tc for contrast
 	var lbl_name = Label.new()
 	lbl_name.text = card.get("name", "???")
-	lbl_name.add_theme_font_size_override("font_size", 10)
+	lbl_name.add_theme_font_size_override("font_size", 8)
 	lbl_name.add_theme_color_override("font_color", foot_tc)
 	lbl_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -349,7 +349,7 @@ static func make_small_card(card: Dictionary, is_dupe: bool = false) -> Control:
 
 	var lbl_rarity = Label.new()
 	lbl_rarity.text = CardDatabase.RARITY_LABELS.get(rarity, "Common")
-	lbl_rarity.add_theme_font_size_override("font_size", 9)
+	lbl_rarity.add_theme_font_size_override("font_size", 7)
 	lbl_rarity.add_theme_color_override("font_color", Color(foot_tc.r, foot_tc.g, foot_tc.b, 0.7))
 	lbl_rarity.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(lbl_rarity)
@@ -357,7 +357,7 @@ static func make_small_card(card: Dictionary, is_dupe: bool = false) -> Control:
 	if is_dupe:
 		var lbl_dupe = Label.new()
 		lbl_dupe.text = "DUPE"
-		lbl_dupe.add_theme_font_size_override("font_size", 9)
+		lbl_dupe.add_theme_font_size_override("font_size", 7)
 		lbl_dupe.add_theme_color_override("font_color", foot_tc)
 		lbl_dupe.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(lbl_dupe)
@@ -365,7 +365,7 @@ static func make_small_card(card: Dictionary, is_dupe: bool = false) -> Control:
 	var variation = card.get("variation", "normal")
 	if variation != "normal":
 		var lbl_var = Label.new()
-		lbl_var.text = "✨ SHINY" if variation == "shiny" else "🎨 FULL ART"
+		lbl_var.text = "✨" if variation == "shiny" else "🎨"
 		lbl_var.add_theme_color_override("font_color", Color(foot_tc.r, foot_tc.g, foot_tc.b, 0.85))
 		lbl_var.add_theme_font_size_override("font_size", 8)
 		lbl_var.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -387,6 +387,7 @@ static func make_dex_card(card: Dictionary, owned: int = 0, best_variant: String
 
 	var root = PanelContainer.new()
 	root.custom_minimum_size = Vector2(80, 110)
+	root.mouse_filter = Control.MOUSE_FILTER_PASS
 	var dex_style = StyleBoxFlat.new()
 	dex_style.bg_color     = bc if is_owned else Color.WHITE
 	dex_style.border_color = Color("#B0B0B0") if is_owned else Color("#D0D0C8")
@@ -404,6 +405,7 @@ static func make_dex_card(card: Dictionary, owned: int = 0, best_variant: String
 
 	var art = PanelContainer.new()
 	art.custom_minimum_size = Vector2(0, 60)
+	art.mouse_filter = Control.MOUSE_FILTER_PASS
 	art.add_theme_stylebox_override("panel", flat_style(bgc, 4))
 	vbox.add_child(art)
 

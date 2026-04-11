@@ -415,15 +415,11 @@ func _build_latest_pull(parent: Control) -> void:
 	_latest_pull_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	section.add_child(_latest_pull_header)
 
-	var scroll = ScrollContainer.new()
-	scroll.custom_minimum_size      = Vector2(0, 160)
-	scroll.vertical_scroll_mode     = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_horizontal    = Control.SIZE_EXPAND_FILL
-	section.add_child(scroll)
-
 	_latest_pull_container = HBoxContainer.new()
-	_latest_pull_container.add_theme_constant_override("separation", 8)
-	scroll.add_child(_latest_pull_container)
+	_latest_pull_container.add_theme_constant_override("separation", 6)
+	_latest_pull_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	_latest_pull_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	section.add_child(_latest_pull_container)
 
 # ── Upgrades section ──────────────────────────────────────────────────────────
 
