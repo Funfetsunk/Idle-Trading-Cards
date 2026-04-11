@@ -19,6 +19,7 @@ var _upgrade_items:  Array = []  # [{container, btn_buy}]
 var _rarity_rows:    Dictionary = {}  # rarity -> {lbl_unique, lbl_total, lbl_dupe}
 var _lbl_total_dupes: Label
 var _btn_sell_dupes:  Button
+var _btn_sell_small:  Button
 var _field_notes_vbox: VBoxContainer
 
 var _float_layer: Control
@@ -79,6 +80,11 @@ func _ready() -> void:
 
 	_connect_signals()
 	_full_refresh()
+
+	# Show offline earnings banner if SaveManager stored a pending reward
+	if not GameState.pending_offline.is_empty():
+		_show_offline_banner(GameState.pending_offline)
+		GameState.pending_offline = {}
 
 # ── Overlays ──────────────────────────────────────────────────────────────────
 
@@ -504,9 +510,14 @@ func _build_collection_summary(parent: Control) -> void:
 	_lbl_total_dupes.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sell_row.add_child(_lbl_total_dupes)
 
-	_btn_sell_dupes = _make_btn("Sell 50 Dupes → 100 fl", C_GREEN)
-	_btn_sell_dupes.add_theme_font_size_override("font_size", 12)
-	_btn_sell_dupes.pressed.connect(_on_sell_dupes)
+	_btn_sell_small = _make_btn("Sell 10 → 20 fl", C_GREEN)
+	_btn_sell_small.add_theme_font_size_override("font_size", 11)
+	_btn_sell_small.pressed.connect(_on_sell_dupes.bind(10))
+	sell_row.add_child(_btn_sell_small)
+
+	_btn_sell_dupes = _make_btn("Sell 50 → 100 fl", C_GREEN)
+	_btn_sell_dupes.add_theme_font_size_override("font_size", 11)
+	_btn_sell_dupes.pressed.connect(_on_sell_dupes.bind(50))
 	sell_row.add_child(_btn_sell_dupes)
 
 # ── Field notes ───────────────────────────────────────────────────────────────
@@ -555,19 +566,36 @@ func _update_tap_count() -> void:
 
 func _update_chores() -> void:
 	var total_earned = GameState.total_earned
+	var locked_shown = 0
+
 	for i in range(_chore_rows.size()):
-		var chore  = CardDatabase.CHORES[i]
-		var rd     = _chore_rows[i]
-		var count  = GameState.chore_counts[i]
-		var cost   = GameState.get_chore_cost(i)
+		var chore    = CardDatabase.CHORES[i]
+		var rd       = _chore_rows[i]
+		var count    = GameState.chore_counts[i]
+		var cost     = GameState.get_chore_cost(i)
 		var unlocked = total_earned >= chore["unlock_at"]
 		var can_buy  = GameState.florins >= cost and unlocked
 
-		rd["panel"].visible = unlocked
 		if not unlocked:
+			# Show the next 2 locked chores as teasers; hide the rest
+			if locked_shown < 2:
+				locked_shown += 1
+				rd["panel"].visible = true
+				rd["panel"].modulate = Color(0.75, 0.75, 0.75, 1.0)
+				rd["lbl_rate"].text  = "🔒 Unlocks at %s fl earned" % NumberFormatter.fmt(chore["unlock_at"])
+				rd["lbl_count"].text = ""
+				rd["lbl_cost"].text  = ""
+				rd["btn_buy"].text   = "Locked"
+				rd["btn_buy"].disabled = true
+			else:
+				rd["panel"].visible = false
 			continue
 
-		var fl_contribution = chore["fl_per_sec"] * count
+		# Unlocked — restore normal appearance
+		rd["panel"].visible  = true
+		rd["panel"].modulate = Color.WHITE
+		rd["btn_buy"].text   = "Hire"
+		var fl_contribution  = chore["fl_per_sec"] * count
 		rd["lbl_count"].text = "Owned: %d" % count
 		rd["lbl_rate"].text  = "+%s fl/s" % NumberFormatter.fmt(fl_contribution) if count > 0 else "%s fl/s each" % NumberFormatter.fmt(chore["fl_per_sec"])
 		rd["lbl_cost"].text  = NumberFormatter.fmt(cost) + " fl"
@@ -583,7 +611,14 @@ func _update_packs() -> void:
 		var purchased = GameState.pack_state[i]["purchased"]
 		var unlocked = total_earned >= pack["unlock_at"]
 
-		# Show pack once unlocked
+		# Detect first unlock and celebrate
+		var pack_id = pack["id"]
+		if unlocked and not (pack_id in GameState.packs_announced):
+			GameState.packs_announced.append(pack_id)
+			GameState.add_log("🎉 %s unlocked!" % pack["label"])
+			_show_event_banner("🎉  " + pack["label"] + " unlocked!", Color("#0F6E56"), 2.5)
+			SaveManager.save()
+
 		pd["panel"].visible = unlocked
 		if not unlocked:
 			continue
@@ -644,8 +679,9 @@ func _update_collection_summary() -> void:
 		rd["lbl_dupe"].text   = str(dupes)
 
 	var total_dupes = GameState.get_total_dupes()
-	_lbl_total_dupes.text    = "Total dupes: %d (need 50 to sell)" % total_dupes
-	_btn_sell_dupes.disabled = total_dupes < 50
+	_lbl_total_dupes.text     = "Total dupes: %d" % total_dupes
+	_btn_sell_small.disabled  = total_dupes < 10
+	_btn_sell_dupes.disabled  = total_dupes < 50
 
 func _update_field_notes(lines: Array) -> void:
 	for child in _field_notes_vbox.get_children():
@@ -704,9 +740,18 @@ func _show_pack_reveal(result: Dictionary) -> void:
 		_latest_pull_header.text = "Latest Pull"
 		_latest_pull_header.add_theme_color_override("font_color", C_TEXT3)
 
+	# Flash a coloured banner for special events before cards animate in
+	var card_delay_mult = 0.12
+	if event == "God Pack":
+		GameState.add_log("⭐ GOD PACK opened!")
+		_show_event_banner("⭐  GOD PACK  ⭐", Color("#D4AC0D"), 1.5)
+		card_delay_mult = 0.28   # slower, more ceremonial reveal
+	elif event == "Double Rare":
+		_show_event_banner("★  DOUBLE RARE  ★", Color("#7F77DD"), 0.9)
+
 	var cards = result.get("cards", [])
 	for i in range(cards.size()):
-		var card   = cards[i]
+		var card      = cards[i]
 		var cname     = card.get("name", "")
 		var variation = card.get("variation", "normal")
 		# It's a dupe if this exact variant count > 1 (already incremented in GameState)
@@ -714,12 +759,12 @@ func _show_pack_reveal(result: Dictionary) -> void:
 
 		var small = CardWidgets.make_small_card(card, is_dupe)
 		small.pivot_offset = Vector2(50, 75)
-		small.scale  = Vector2(0.01, 0.01)
+		small.scale      = Vector2(0.01, 0.01)
 		small.modulate.a = 0.0
 		_latest_pull_container.add_child(small)
 
 		var tween = create_tween()
-		tween.tween_interval(i * 0.12)
+		tween.tween_interval(i * card_delay_mult)
 		tween.set_parallel(true)
 		tween.tween_property(small, "scale",      Vector2(1, 1), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		tween.tween_property(small, "modulate:a", 1.0,           0.25)
@@ -740,8 +785,8 @@ func _on_open_pack(idx: int) -> void:
 func _on_buy_upgrade(idx: int) -> void:
 	GameState.buy_upgrade(idx)
 
-func _on_sell_dupes() -> void:
-	GameState.sell_dupes()
+func _on_sell_dupes(batch_size: int = 50) -> void:
+	GameState.sell_dupes(batch_size)
 
 func _on_floridex_pressed() -> void:
 	_floridex.refresh()
@@ -769,6 +814,51 @@ func _on_reset_pressed() -> void:
 func _do_reset() -> void:
 	SaveManager.reset()
 	_full_refresh()
+
+# ── Floating banners ─────────────────────────────────────────────────────────
+
+# Centred full-width banner that fades after `duration` seconds.
+func _show_event_banner(text: String, bg: Color, duration: float) -> void:
+	var banner = PanelContainer.new()
+	var style  = StyleBoxFlat.new()
+	style.bg_color = bg
+	style.content_margin_left   = 16
+	style.content_margin_right  = 16
+	style.content_margin_top    = 12
+	style.content_margin_bottom = 12
+	banner.add_theme_stylebox_override("panel", style)
+	banner.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	banner.offset_top    = 80
+	banner.offset_bottom = 130
+	banner.offset_left   = 20
+	banner.offset_right  = -20
+	banner.mouse_filter  = Control.MOUSE_FILTER_IGNORE
+	_float_layer.add_child(banner)
+
+	var lbl = Label.new()
+	lbl.text = text
+	lbl.add_theme_font_size_override("font_size", 20)
+	lbl.add_theme_color_override("font_color", Color.WHITE)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+	lbl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	banner.add_child(lbl)
+
+	var tween = create_tween()
+	tween.tween_interval(duration)
+	tween.tween_property(banner, "modulate:a", 0.0, 0.6)
+	tween.chain().tween_callback(banner.queue_free)
+
+# Offline earnings banner — blue, shown at top, auto-dismisses after 4 seconds.
+func _show_offline_banner(data: Dictionary) -> void:
+	var earned  = data.get("amount",  0.0)
+	var seconds = data.get("seconds", 0)
+	var mins    = int(seconds / 60)
+	var hrs     = int(mins / 60)
+	var time_str = ("%dh %dm" % [hrs, mins % 60]) if hrs > 0 else ("%dm" % mins)
+	var text = "Welcome back! Earned %s fl while away (%s)" % [NumberFormatter.fmt(earned), time_str]
+	GameState.add_log(text)
+	_show_event_banner(text, Color("#185FA5"), 3.5)
 
 # ── Floating label animation ──────────────────────────────────────────────────
 

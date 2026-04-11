@@ -22,6 +22,9 @@ var collected:      Dictionary = {}
 var duplicates:     Dictionary = {}
 var log_lines:      Array = []
 var last_save_time: float = 0.0
+var pity_counter:    int        = 0   # packs opened without an ultra+ pull
+var packs_announced: Array      = []  # pack IDs whose unlock has been celebrated
+var pending_offline: Dictionary = {}  # set by SaveManager; consumed by Main.gd for banner
 
 var _tick_accum: float = 0.0
 
@@ -44,10 +47,13 @@ func initialize() -> void:
 	pack_state = []
 	for _i in range(CardDatabase.PACKS.size()):
 		pack_state.append({"purchased": 0, "savings": 0.0})
-	collected   = {}
-	duplicates  = {}
-	log_lines   = []
-	last_save_time = 0.0
+	collected    = {}
+	duplicates   = {}
+	log_lines    = []
+	last_save_time  = 0.0
+	pity_counter    = 0
+	packs_announced = []
+	pending_offline = {}
 	_tick_accum = 0.0
 	state_reset.emit()
 
@@ -153,13 +159,13 @@ func get_total_dupes() -> int:
 		total += duplicates[rarity]
 	return total
 
-func sell_dupes() -> bool:
+func sell_dupes(batch_size: int = 50) -> bool:
 	var total = get_total_dupes()
-	if total < 50:
+	if total < batch_size:
 		return false
-	var sets = int(total / 50)
-	var earn = sets * 100.0
-	var remaining = sets * 50
+	var sets      = int(total / batch_size)
+	var earn      = sets * (batch_size * 2.0)   # 2 fl per dupe regardless of batch size
+	var remaining = sets * batch_size
 	for rarity in CardDatabase.RARITY_ORDER:
 		if remaining <= 0:
 			break
@@ -168,7 +174,7 @@ func sell_dupes() -> bool:
 		duplicates[rarity] = have - take
 		remaining -= take
 	add_florins(earn)
-	add_log("Sold %d dupes for %s fl" % [sets * 50, NumberFormatter.fmt(earn)])
+	add_log("Sold %d dupes for %s fl" % [sets * batch_size, NumberFormatter.fmt(earn)])
 	dupes_changed.emit(get_total_dupes())
 	SaveManager.save()
 	return true
